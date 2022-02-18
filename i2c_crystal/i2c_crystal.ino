@@ -94,7 +94,7 @@ void loop() {
     }
   }
 
-  delay(1000);
+  delay(500);
 }
 
 String Take_input (void)
