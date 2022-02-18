@@ -20,11 +20,13 @@ char keys[ROWS][COLS] = {
   {'7', '8', 'C', '9'},
   {'*', '0', 'D', '#'}
 };
-SoftwareSerial mySerial(12,11);
-byte rowPins[ROWS] = { 4, 5, 6,7}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {8,9,10,11}; //connect to the column pinouts of the keypad
+SoftwareSerial mySerial(12, 11);
+byte rowPins[ROWS] = { 4, 5, 6, 7}; //connect to the row pinouts of the keypad
+byte colPins[COLS] = {8, 9, 10, 11}; //connect to the column pinouts of the keypad
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+
 void setup()
 {
   Serial.begin(9600);
@@ -36,7 +38,11 @@ void setup()
   lcd.print("PH number input :");
   mySerial.begin(9600);
 }
+
+
 void loop() {
+
+
   int cool = sothyro.ping_cm();
   char key = keypad.getKey();
   Serial.print(key);
@@ -46,6 +52,8 @@ void loop() {
   lcd.setCursor(0, 1);
   lcd.print("Cans : ");
   lcd.print(cans);
+
+
   if (cool < 5 && cool >= 1) {
     for (angle = 90; angle <= 180; angle += 30) {
       servo.write(angle);
@@ -66,19 +74,26 @@ void loop() {
     }
     cans += 1;
   }
-  else if (key == '#')
+
+
+  if (key == '#') // we check if someone pressed #
   {
+    // enter the phone number
     number = Take_input();
-    if (key == 'C')
+
+  }
+
+  // BUG: fix bug
+  if (key == 'C')
+  {
+    bool success = send_sms(number);
+    if (success == true)
     {
-      bool success = send_sms(number);
-      if (success == true)
-      {
-        plastic = 0;
-        cans =0;
-      }
+      plastic = 0;
+      cans = 0;
     }
   }
+
   delay(1000);
 }
 
@@ -115,7 +130,7 @@ void print_content (String str)
 }
 bool send_sms (String number)
 {
-  Serial.println("Initializing..."); 
+  Serial.println("Initializing...");
   delay(1000);
 
   mySerial.println("AT"); //Once the handshake test is successful, it will back to OK
@@ -139,11 +154,11 @@ void print_head (String str)
 void updateSerial()
 {
   delay(500);
-  while (Serial.available()) 
+  while (Serial.available())
   {
     mySerial.write(Serial.read());//Forward what Serial received to Software Serial Port
   }
-  while(mySerial.available()) 
+  while (mySerial.available())
   {
     Serial.write(mySerial.read());//Forward what Software Serial received to Serial Port
   }
