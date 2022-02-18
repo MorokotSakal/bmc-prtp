@@ -128,29 +128,6 @@ void print_content (String str)
   lcd.setCursor(0, 3);
   lcd.print(str);
 }
-bool send_sms (String number)
-{
-  Serial.println("Initializing...");
-  delay(1000);
-
-  mySerial.println("AT"); //Once the handshake test is successful, it will back to OK
-  updateSerial();
-  mySerial.println("AT+CMGF=1"); // Configuring TEXT mode
-  updateSerial();
-  mySerial.print("AT+CMGS=\""); // Send the SMS number
-  mySerial.print(number);
-  mySerial.println("\"");
-  updateSerial();
-  mySerial.print("Hello"); //text content
-  updateSerial();
-  mySerial.write(26);
-  return (true);
-}
-void print_head (String str)
-{ lcd.clear();
-  lcd.setCursor(0, 3);
-  lcd.print(str);
-}
 void updateSerial()
 {
   delay(500);
