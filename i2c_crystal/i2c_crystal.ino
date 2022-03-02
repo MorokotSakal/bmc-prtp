@@ -7,7 +7,7 @@
 #define echo 3
 NewPing sothyro(trig, echo, 100);
 Servo servo;
-int servoPin = 22;
+int servoPin = 13;
 int angle = 0;
 int plastic = 0;
 int cans = 0;
@@ -34,8 +34,6 @@ void setup()
   lcd.begin();
   lcd.clear();
   lcd.backlight();
-  lcd.setCursor(0, 2);
-  lcd.print("PH number input :");
   mySerial.begin(9600);
 }
 
@@ -46,15 +44,17 @@ void loop() {
   int cool = sothyro.ping_cm();
   char key = keypad.getKey();
   Serial.print(key);
+  Serial.print(cool);
+  lcd.setCursor(0, 2);
+  lcd.print("PH number input :");
   lcd.setCursor(0, 0);
   lcd.print("Plastic :");
   lcd.print(plastic);
   lcd.setCursor(0, 1);
   lcd.print("Cans : ");
   lcd.print(cans);
-
-
-  if (cool < 5 && cool >= 1) {
+  delay(1000);
+  if (cool <= 3 && cool >= 1) {
     for (angle = 90; angle <= 180; angle += 30) {
       servo.write(angle);
     }
@@ -64,7 +64,7 @@ void loop() {
     }
     plastic += 1;
   }
-  else if (cool >= 5 && cool < 10) {
+  else if (cool >= 11 && cool <= 13) {
     for (angle = 90; angle >= 0; angle -= 30) {
       servo.write(angle);
     }
@@ -80,20 +80,7 @@ void loop() {
   {
     // enter the phone number
     number = Take_input();
-
   }
-
-  // BUG: fix bug
-  if (key == 'C')
-  {
-    bool success = send_sms(number);
-    if (success == true)
-    {
-      plastic = 0;
-      cans = 0;
-    }
-  }
-
   delay(500);
 }
 
@@ -121,6 +108,12 @@ String Take_input (void)
       }
     }
   }
+  lcd.clear();
+  lcd.print("Money Sent");
+  plastic =0;
+  cans = 0;
+  lcd.setCursor(0,2);
+  lcd.print("PH number input : ");
   return num;
 }
 void print_content (String str)
