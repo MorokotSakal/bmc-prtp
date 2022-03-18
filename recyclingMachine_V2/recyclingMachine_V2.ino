@@ -68,6 +68,7 @@ void loop() {
   //delay(1000);
   //Serial.println(cool);
 
+  // ---- check the distance every one seconds ---
   currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
   if (currentMillis - startMillis >= period)  //test whether the period has elapsed
   {
@@ -86,16 +87,24 @@ void loop() {
       currentDistanceFlag = 0;
     }
     
-    // check the state
+    // check the state of the distance
+    // if distance change wait until it stable
     if (currentDistanceFlag != previousDistanceFlag) {
       previousDistanceFlag = currentDistanceFlag;
       waitTimerFlag = 0;
     }
     else if (currentDistanceFlag == previousDistanceFlag) {
+
+      // if the distance is stable
+      // count the timer up
       waitTimerFlag++;
 
+      // after three seconds of stable distance
+      // start moving the servo
+      // we move the servo only when there is plastic or can
       if (waitTimerFlag == 3)
       {
+        
         if (currentDistanceFlag != 0)
         {
           servoFlag = 1;
@@ -115,7 +124,8 @@ void loop() {
     Serial.print(" waitTimerFlag: ");
     Serial.println(waitTimerFlag);
   }
-
+  
+  // ---- function to check when to move the servo
   if (servoFlag == 1 && currentDistanceFlag == 1) {
     Serial.println("Move Plastic");
     
