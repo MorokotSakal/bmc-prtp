@@ -30,6 +30,15 @@ unsigned long startMillis;  //some global variables available anywhere in the pr
 unsigned long currentMillis;
 const unsigned long period = 1000;  //the value is a number of milliseconds
 
+
+//event triggering
+int currentDistanceFlag = 0;
+int waitTimerFlag = 0;
+int previousDistanceFlag = 0;
+int servoFlag = 0;
+
+int cool = 0;
+
 void setup()
 {
   Serial.begin(9600);
@@ -39,15 +48,7 @@ void setup()
   lcd.backlight();
 }
 void loop() {
-  currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
-  if (currentMillis - startMillis >= period)  //test whether the period has elapsed
-  {
-    int cool = sothyro.ping_cm();
-    startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
-  }
-  
-  char key = keypad.getKey();
-  
+
   //  Serial.print("Plastic : ");
   //  Serial.print(plastic);
   //  Serial.print("Cans: ");
@@ -58,37 +59,100 @@ void loop() {
   //lcd.print("Amount: ");
   //lcd.print(calculation);
   //lcd.print(" riels");
-  //lcd.setCursor(0, 0);
-  //lcd.print("Plastic :");
-  //lcd.print(plastic);
-  //lcd.setCursor(0, 1);
-  //lcd.print("Cans : ");
-  //lcd.print(cans);
+  lcd.setCursor(0, 0);
+  lcd.print("Plastic :");
+  lcd.print(plastic);
+  lcd.setCursor(0, 1);
+  lcd.print("Cans : ");
+  lcd.print(cans);
   //delay(1000);
   //Serial.println(cool);
-  if (cool <= 3 && cool >= 1) {
-    for (angle = 90; angle <= 180; angle += 30) {
-      servo.write(angle);
+
+  currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
+  if (currentMillis - startMillis >= period)  //test whether the period has elapsed
+  {
+    cool = sothyro.ping_cm();
+    startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
+
+    // check the state of the cool
+    if (cool <= 5 && cool >= 1) {
+      currentDistanceFlag = 1; // can
     }
-    delay(1500);
-    for (angle = 180; angle >= 90; angle -= 30) {
-      servo.write(angle);
+    else if (cool <= 8 && cool >= 7) {
+      currentDistanceFlag = 2; // plastic
     }
-    plastic += 1;
-    calculation += 10;
-  }
-  else if (cool <= 8 && cool >= 7) {
-    for (angle = 90; angle <= 180; angle += 30) {
-      servo.write(angle);
+    else
+    {
+      currentDistanceFlag = 0;
     }
-    delay(1500);
-    for (angle = 180; angle >= 90; angle -= 30) {
-      servo.write(angle);
+    
+    // check the state
+    if (currentDistanceFlag != previousDistanceFlag) {
+      previousDistanceFlag = currentDistanceFlag;
+      waitTimerFlag = 0;
     }
-    cans += 1;
-    calculation += 50;
+    else if (currentDistanceFlag == previousDistanceFlag) {
+      waitTimerFlag++;
+
+      if (waitTimerFlag == 3)
+      {
+        if (currentDistanceFlag != 0)
+        {
+          servoFlag = 1;
+          waitTimerFlag = 0;
+        }
+        else
+        {
+          waitTimerFlag = 0;
+        }
+      }
+    }
+
+    Serial.print("Distance stat: ");
+    Serial.print(cool);
+    Serial.print(" currentDistanceFlag: ");
+    Serial.print(currentDistanceFlag);
+    Serial.print(" waitTimerFlag: ");
+    Serial.println(waitTimerFlag);
   }
 
+  if (servoFlag == 1 && currentDistanceFlag == 1) {
+    Serial.println("Move Plastic");
+    
+    for (angle = 90; angle <= 180; angle += 30) {
+      servo.write(angle);
+    }
+    delay(1500);
+    for (angle = 180; angle >= 90; angle -= 30) {
+      servo.write(angle);
+    }
+
+    plastic += 1;
+    calculation += 10;
+
+    servoFlag = 0;
+    currentDistanceFlag = 0;
+  }
+  else if (servoFlag == 1 && currentDistanceFlag == 2) {
+    Serial.println("Move Can");
+
+    for (angle = 90; angle <= 180; angle += 30) {
+      servo.write(angle);
+    }
+    delay(1500);
+    for (angle = 180; angle >= 90; angle -= 30) {
+      servo.write(angle);
+    }
+
+    cans += 1;
+    calculation += 50;
+
+    servoFlag = 0;
+    currentDistanceFlag = 0;
+  }
+
+  // --- Check keypad input ----
+  char key = keypad.getKey();
   if (key == '#') // we check if someone pressed #
   {
     Serial.println(key);
@@ -96,7 +160,6 @@ void loop() {
     number = Take_input();
 
   }
-  //delay(500);
 }
 
 String Take_input (void)
